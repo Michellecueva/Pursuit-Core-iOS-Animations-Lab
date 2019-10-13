@@ -24,6 +24,14 @@ class ViewController: UIViewController {
            }
     }
     
+    var animationsOptions: [UIView.AnimationOptions] = [.repeat, .autoreverse, .curveEaseIn, .curveEaseOut, .curveLinear]
+    
+    var indexOfOptionsArr = Int() {
+        didSet {
+            optionsPicker.reloadAllComponents()
+        }
+    }
+    
     lazy var blueSquare: UIView = {
         let view = UIView()
         view.backgroundColor = .blue
@@ -137,6 +145,13 @@ class ViewController: UIViewController {
         return label
     }()
     
+    lazy var optionsPicker: UIPickerView = {
+        let picker = UIPickerView()
+        picker.delegate = self
+        picker.dataSource = self
+        return picker
+    }()
+    
     lazy var blueSquareHeightConstaint: NSLayoutConstraint = {
         blueSquare.heightAnchor.constraint(equalToConstant: 200)
     }()
@@ -161,38 +176,48 @@ class ViewController: UIViewController {
         configureConstraints()
         animationSpeed = 2
         movingDistance = 150
+        indexOfOptionsArr = 1
+        optionsPicker.selectRow(indexOfOptionsArr, inComponent: 0, animated: false)
     }
     
     @IBAction func animateSquareUp(sender: UIButton) {
         let oldOffset = blueSquareCenterYConstraint.constant
         blueSquareCenterYConstraint.constant = oldOffset - movingDistance
-        UIView.animate(withDuration: animationSpeed) { [unowned self] in
+        UIView.animate(withDuration: animationSpeed, delay: 0, options: [animationsOptions[indexOfOptionsArr]], animations: { [unowned self] in
             self.view.layoutIfNeeded()
-        }
+        }, completion: { (done) in
+            self.blueSquareCenterYConstraint.constant = oldOffset
+        })
     }
     
     @IBAction func animateSquareDown(sender: UIButton) {
-        let oldOffet = blueSquareCenterYConstraint.constant
-        blueSquareCenterYConstraint.constant = oldOffet + movingDistance
-        UIView.animate(withDuration: animationSpeed) { [unowned self] in
+        let oldOffset = blueSquareCenterYConstraint.constant
+        blueSquareCenterYConstraint.constant = oldOffset + movingDistance
+        UIView.animate(withDuration: animationSpeed, delay: 0, options: [animationsOptions[indexOfOptionsArr]], animations: { [unowned self] in
             self.view.layoutIfNeeded()
-        }
+        }, completion: { (done) in
+            self.blueSquareCenterYConstraint.constant = oldOffset
+        })
     }
     
     @objc func animateSquareLeft(sender: UIButton) {
         let oldOffset = blueSquareCenterXConstraint.constant
         blueSquareCenterXConstraint.constant = oldOffset - movingDistance
-        UIView.animate(withDuration: animationSpeed) { [unowned self] in
+        UIView.animate(withDuration: animationSpeed, delay: 0, options: [animationsOptions[indexOfOptionsArr]], animations: { [unowned self] in
             self.view.layoutIfNeeded()
-        }
+        }, completion: { (done) in
+            self.blueSquareCenterXConstraint.constant = oldOffset
+        })
     }
     
     @objc func animateSquareRight(sender: UIButton) {
-        let oldOffet = blueSquareCenterXConstraint.constant
-        blueSquareCenterXConstraint.constant = oldOffet + movingDistance
-        UIView.animate(withDuration: animationSpeed) { [unowned self] in
+        let oldOffset = blueSquareCenterXConstraint.constant
+        blueSquareCenterXConstraint.constant = oldOffset + movingDistance
+       UIView.animate(withDuration: animationSpeed, delay: 0, options: [animationsOptions[indexOfOptionsArr]], animations: { [unowned self] in
             self.view.layoutIfNeeded()
-        }
+        }, completion: { (done) in
+            self.blueSquareCenterXConstraint.constant = oldOffset
+        })
     }
     
     @objc func animateSpeed(sender: UIStepper) {
@@ -210,6 +235,7 @@ class ViewController: UIViewController {
         view.addSubview(buttonXStackView)
         view.addSubview(stepperStackview)
         view.addSubview(labelStackview)
+        view.addSubview(optionsPicker)
     }
     
     private func addStackViewSubviews() {
@@ -222,6 +248,7 @@ class ViewController: UIViewController {
         constrainUpButton()
         constrainDownButton()
         constrainStackViews()
+        constainPicker()
     }
     
     private func constrainUpButton() {
@@ -244,6 +271,17 @@ class ViewController: UIViewController {
             blueSquareWidthConstraint,
             blueSquareCenterXConstraint,
             blueSquareCenterYConstraint
+        ])
+    }
+    
+    private func constainPicker() {
+        optionsPicker.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            optionsPicker.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            optionsPicker.topAnchor.constraint(equalTo: labelStackview.bottomAnchor, constant: 10),
+            optionsPicker.heightAnchor.constraint(equalToConstant: 100),
+            optionsPicker.widthAnchor.constraint(equalTo: view.widthAnchor)
         ])
     }
     
@@ -270,10 +308,35 @@ class ViewController: UIViewController {
             
             labelStackview.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             labelStackview.topAnchor.constraint(equalTo: stepperStackview.bottomAnchor, constant: 30),
-            labelStackview.heightAnchor.constraint(equalToConstant: 50),
+            labelStackview.heightAnchor.constraint(equalToConstant: 20),
             labelStackview.widthAnchor.constraint(equalTo: view.widthAnchor),
         ])
     }
 }
 
+extension ViewController : UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return animationsOptions.count
+    }
+    
+    
+}
+
+extension ViewController: UIPickerViewDelegate {
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        
+        let optionsForPicker = ["Repeat","Auto Reverse","Curve Ease-In","Curve Ease-Out","Curve Linear"]
+        
+        let currentOption = optionsForPicker[row]
+        return currentOption
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        indexOfOptionsArr = row
+    }
+}
 
